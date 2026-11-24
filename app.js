@@ -910,6 +910,13 @@ function showAll() { flyTo(fitView(bounds, 0)); }
 $('#btn-in').addEventListener('click', () => zoomStep(1.7));
 $('#btn-out').addEventListener('click', () => zoomStep(1 / 1.7));
 $('#btn-fit').addEventListener('click', showAll);
+// the title takes you home: clear any search and fly back to the whole map
+$('#home').addEventListener('click', e => {
+  e.preventDefault();
+  if (qEl.value) { qEl.value = ''; runSearch(false); }
+  showAll();
+  dismissHint();
+});
 $('#btn-theme').addEventListener('click', () => {
   const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
   document.documentElement.dataset.theme = t;
