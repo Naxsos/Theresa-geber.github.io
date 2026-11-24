@@ -580,6 +580,8 @@ const qEl = $('#q'), qClear = $('#q-clear'), qHint = $('#q-hint');
 const resWrap = $('#results-wrap'), resHead = $('#results-head'), resList = $('#results'), topicsWrap = $('#topics-wrap');
 let hits = [], active = -1, fxDirty = false;
 const MAX_LIST = 80;
+const MAX_Q = 200;              // longest query accepted, typed or from a #q= link (the longest note is ~125 characters)
+qEl.maxLength = MAX_Q;
 
 function markUp(el, text, terms) {
   const stems = terms.map(stem), re = /[A-Za-z0-9\u00c0-\u024f]+/g;
@@ -961,10 +963,14 @@ function scheduleHash() {
   }, 500);
 }
 function applyHash() {
-  const h = decodeURIComponent(location.hash.slice(1));
-  if (h.startsWith('q=')) { qEl.value = h.slice(2); runSearch(false); if (hits.length) { active = 0; Object.assign(view, clampView(itemView(hits[0].it))); select(0, false); } return true; }
-  const m = /^@(-?[\d.]+),(-?[\d.]+),([\d.]+)$/.exec(h);
-  if (m) { Object.assign(view, clampView({ x: +m[1], y: +m[2], k: +m[3] })); return true; }
+  let h;
+  try { h = decodeURIComponent(location.hash.slice(1)); } catch (e) { return false; }   // mangled link (stray %): just open the whole map
+  if (h.startsWith('q=')) { qEl.value = h.slice(2, 2 + MAX_Q); runSearch(false); if (hits.length) { active = 0; Object.assign(view, clampView(itemView(hits[0].it))); select(0, false); } return true; }
+  const m = /^@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(\d+(?:\.\d+)?)$/.exec(h);
+  if (m) {
+    const v = { x: +m[1], y: +m[2], k: +m[3] };
+    if (isFinite(v.x) && isFinite(v.y) && isFinite(v.k)) { Object.assign(view, clampView(v)); return true; }
+  }
   return false;
 }
 
